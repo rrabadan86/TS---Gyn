@@ -609,7 +609,7 @@ def main():
                 pass
 
             # >>> NOVO PASSO: TROCAR LOJA <<<
-# --------------            trocar_loja(page, "GOIANIA - TEA SHOP FLAMBOYANT")
+            trocar_loja(page, "GOIANIA - TEA SHOP FLAMBOYANT")
 
             step("3) Menu: Vendas → Vendedor Analítico")
             goto_vendedor_analitico_via_menu(page)
