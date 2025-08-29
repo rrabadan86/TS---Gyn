@@ -422,7 +422,7 @@ def write_excel_from_json(data, out_path: Path):
     log(f"Arquivo salvo com estrutura do modelo: {out_path.name}")
 
 # -------------- TROCAR LOJA --------------
-trocar_loja(page, "GOIANIA - TEA SHOP FLAMBOYANT")
+def trocar_loja(page, "GOIANIA - TEA SHOP FLAMBOYANT")
 
 # -------- Navegação resiliente: goto com retries --------
 def goto_login_with_retries(page, url, tries=5):
