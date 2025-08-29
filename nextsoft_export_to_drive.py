@@ -422,27 +422,7 @@ def write_excel_from_json(data, out_path: Path):
     log(f"Arquivo salvo com estrutura do modelo: {out_path.name}")
 
 # -------------- TROCAR LOJA --------------
-def trocar_loja(page, loja_nome=None):
-    alvo = (loja_nome or os.getenv("APPNEXT_LOJA_DESTINO") or "GOIANIA - TEA SHOP FLAMBOYANT")
-    step(f"2) Trocando loja → {alvo}")
-    try:
-        opened = _click_first(page, [
-            "button:has-text('TEA SHOP')",
-            "[data-bs-toggle='dropdown']",
-            ".dropdown-toggle",
-        ])
-        if not opened:
-            _click_first(page, ["xpath=(//i[contains(@class,'store') or contains(@class,'shop')]/ancestor::*[self::button or self::a])[1]"])
-        try:
-            page.get_by_role("menuitem", name=re.compile(rf"^{re.escape(alvo)}\.?$", re.I)).first.click(timeout=6000, force=True)
-        except Exception:
-            if not _click_first(page, [f"text=^{re.escape(alvo)}$"]):
-                raise RuntimeError("Não encontrei a opção da loja no dropdown.")
-        log(f"Loja selecionada: {alvo}")
-        try: page.wait_for_load_state("networkidle", timeout=12000)
-        except Exception: pass
-    except Exception as e:
-        log(f"Falha ao trocar loja: {e}")
+trocar_loja(page, "GOIANIA - TEA SHOP FLAMBOYANT")
 
 # -------- Navegação resiliente: goto com retries --------
 def goto_login_with_retries(page, url, tries=5):
