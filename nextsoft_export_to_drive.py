@@ -422,7 +422,54 @@ def write_excel_from_json(data, out_path: Path):
     log(f"Arquivo salvo com estrutura do modelo: {out_path.name}")
 
 # -------------- TROCAR LOJA --------------
-def trocar_loja(page, "GOIANIA - TEA SHOP FLAMBOYANT")
+def trocar_loja(page, loja_nome=None): 
+     """
+     Tenta trocar a loja pelo menu superior.
+     Estratégia: procurar qualquer botão/área com 'TEA SHOP' ou nome da cidade e clicar.
+     Depois selecionar o item do menu pelo texto (aceita ponto final).
+     """
+     alvo = (loja_nome or os.getenv("APPNEXT_LOJA_DESTINO")
+             or "GOIANIA - TEA SHOP FLAMBOYANT")
+     alvo_regex = re.compile(rf"^{re.escape(alvo)}\.?$", re.IGNORECASE)
+
+     step(f"2) Trocando loja → {alvo}")
+     try:
+         opened = _click_first(page, [
+             "button:has-text('TEA SHOP')",
+             "button:has-text('VILA MADALENA')",
+             "button:has-text('FLAMBOYANT')",
+             "text=/S[ÂA]O PAULO - TEA SHOP|GOI[ÂA]NIA - TEA SHOP/i",
+             "[data-bs-toggle='dropdown']",
+             ".dropdown-toggle",
+            "xpath=(//*[contains(translate(normalize-space(.),'áãéíóúâêô','aaeiouaeo'),'TEA SHOP')])[1]",
+         ])
+         if not opened:
+            # último recurso: clicar em algo com ícone de loja (emoji/mdi) + caret
+             opened = _click_first(page, [
+                "xpath=(//i[contains(@class,'store') or contains(@class,'shop')]/ancestor::*[self::button or self::a])[1]"
+             ])
+
+         # Seleciona a opção pelo texto
+         try:
+            page.get_by_role("menuitem", name=alvo_regex).first.click(timeout=6000, force=True)
+         except Exception:
+             clicked = _click_first(page, [
+                 f"text=^{alvo}$",
+                 f"text=^{re.escape(alvo)}",
+                 f"xpath=//*[normalize-space()='{alvo}'] | //*[starts-with(normalize-space(), '{alvo}')]",
+             ])
+             if not clicked:
+                 raise RuntimeError("Não encontrei a opção da loja no dropdown.")
+
+         log(f"Loja selecionada: {alvo}")
+         try:
+             page.wait_for_load_state("networkidle", timeout=12000)
+         except Exception:
+             pass
+
+     except Exception as e:
+         log(f"Falha ao trocar loja: {e}")
+
 
 # -------- Navegação resiliente: goto com retries --------
 def goto_login_with_retries(page, url, tries=5):
