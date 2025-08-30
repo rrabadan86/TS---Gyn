@@ -519,6 +519,7 @@ def write_excel_from_json(data, out_path: Path):
     log(f"Arquivo salvo com estrutura do modelo: {out_path.name}")
 
 # -------------- TROCAR LOJA --------------
+# -------------- TROCAR LOJA --------------
 def trocar_loja(page, loja_nome=None):
     """
     Tenta trocar a loja pelo menu superior.
