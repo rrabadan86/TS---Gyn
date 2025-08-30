@@ -12,7 +12,6 @@ jobs:
     timeout-minutes: 30
 
     env:
-      # Vars de negócio (substitua por "secrets" no repositório)
       APPNEXT_REDE: ${{ secrets.APPNEXT_REDE }}
       APPNEXT_USER: ${{ secrets.APPNEXT_USER }}
       APPNEXT_PASS: ${{ secrets.APPNEXT_PASS }}
@@ -24,8 +23,6 @@ jobs:
       TEMPLATE_XLSX: ${{ secrets.TEMPLATE_XLSX }}
       TEMPLATE_HEADER_ROW: ${{ secrets.TEMPLATE_HEADER_ROW }}
       APPNEXT_LOJA_ID_DESTINO: ${{ secrets.APPNEXT_LOJA_ID_DESTINO }}
-
-      # Credenciais do rclone (use APENAS um método)
       RCLONE_TOKEN: ${{ secrets.RCLONE_TOKEN }}
       RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE: ${{ secrets.RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE }}
 
@@ -43,11 +40,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y rclone
           python -m pip install -r requirements.txt
-          python -m pip install playwright
+          python -m pip install playwright black
           python -m playwright install --with-deps chromium
 
       - name: Configure rclone
-        shell: bash
         run: |
           mkdir -p ~/.config/rclone
           {
@@ -59,7 +55,6 @@ jobs:
             fi
           } > ~/.config/rclone/rclone.conf
 
-          # Se service account em base64 estiver presente, escreve arquivo e referencia no conf
           if [ -n "${RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE}" ]; then
             echo "${RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE}" | base64 -d > /tmp/sa.json
             echo "service_account_file = /tmp/sa.json" >> ~/.config/rclone/rclone.conf
@@ -69,6 +64,20 @@ jobs:
           sed 's/token = .*/token = ***REDACTED***/' ~/.config/rclone/rclone.conf || true
           echo "::endgroup::"
 
-      - name: Run downloader
+      - name: Normalize Python file (fix tabs/NBSP)
         run: |
-          python nextsoft_export_to_drive.py
+          python - <<'PY'
+          p='nextsoft_export_to_drive.py'
+          b=open(p,'rb').read()
+          b=b.replace(b'\r\n',b'\n').replace(b'\r',b'\n')   # CRLF -> LF
+          b=b.replace(b'\t', b'    ')                       # TAB -> 4 espaços
+          b=b.replace(b'\xc2\xa0', b' ')                    # NBSP -> espaço normal
+          open(p,'wb').write(b)
+          PY
+
+      - name: Format with black
+        run: |
+          black -q nextsoft_export_to_drive.py
+
+      - name: Run script
+        run: python nextsoft_export_to_drive.py
