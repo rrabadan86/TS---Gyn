@@ -636,7 +636,7 @@ def main():
                 pass
 
             # 2) Trocar loja via secret (habilite se quiser forçar)
-            # trocar_loja(page, os.getenv("APPNEXT_LOJA_DESTINO"))
+            trocar_loja(page, os.getenv("APPNEXT_LOJA_DESTINO"))
 
             # 3) Ir para Vendas > Vendedor Analítico
             step("3) Menu: Vendas → Vendedor Analítico")
