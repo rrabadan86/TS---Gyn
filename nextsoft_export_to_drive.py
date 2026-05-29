@@ -362,21 +362,25 @@ COL_WIDTHS = {
 # tipo: "text" | "num" | "data_br"
 # >>> AJUSTE os nomes de campo conforme o log "[debug] colunas do JSON normalizado:".
 COLUNAS = [
-    ("Loja",                ["loja", "lojaNome", "nomeLoja", "loja.nome"],                               "text",    "APPNEXT_LOJA_DESTINO"),
-    ("CNPJ",                ["cnpj", "lojaCnpj", "cnpjLoja", "loja.cnpj"],                               "text",    "APPNEXT_LOJA_CNPJ"),
-    ("Data",                ["dataVenda", "data", "dataHora", "dataEmissao", "emissao", "dataMovimento"], "data_br", None),
-    ("Número Cupom",        ["numeroCupom", "cupom", "numeroDocumento", "documento", "numero"],           "text",    None),
-    ("Qtd. Itens no Cupom", ["qtdItens", "qtdItensCupom", "quantidadeItens", "itensCupom", "itens"],      "num",     None),
-    ("Código Produto",      ["codigoProduto", "produtoCodigo", "codigo", "produto.codigo", "codProduto"], "text",    None),
-    ("Descrição",           ["descricao", "produtoDescricao", "produto.descricao", "produto.nome", "produto", "item.descricao"], "text", None),
-    ("Grupo",               ["grupo", "grupoNome", "grupo.nome", "nomeGrupo"],                            "text",    None),
-    ("Sub-Grupo",           ["subGrupo", "subgrupo", "subGrupo.nome", "subgrupo.nome"],                   "text",    None),
-    ("Categorias",          ["categorias", "categoria", "categorias.nome", "categoria.nome"],             "text",    None),
-    ("Quantidade",          ["quantidade", "qtd", "qtde"],                                                "num",     None),
-    ("Valor Unitário",      ["valorUnitario", "precoUnitario", "valorUnit", "preco"],                     "num",     None),
-    ("Desconto Unitário",   ["descontoUnitario", "desconto", "valorDesconto", "descUnitario"],            "num",     None),
-    ("Valor Total",         ["valorTotal", "total", "valorLiquido", "totalItem"],                         "num",     None),
-    ("Vendedor",            ["vendedor", "vendedorNome", "vendedor.nome", "colaborador", "usuario"],      "text",    None),
+    ("Loja",                ["loja"],                         "text",    "APPNEXT_LOJA_DESTINO"),
+    ("CNPJ",                ["cnpj"],                         "text",    "APPNEXT_LOJA_CNPJ"),
+    ("Data",                ["data"],                         "data_br", None),
+    ("Número Cupom",        ["numeroCupom"],                  "text",    None),
+    # ATENÇÃO: a API tem 'quantidadeItem' e 'quantidade'. Assumi que
+    # 'quantidadeItem' = itens no cupom e 'quantidade' = qtd da linha.
+    # Confira pela amostra "[debug] 1a linha"; se estiver trocado, basta
+    # inverter os campos nesta linha e na coluna "Quantidade" abaixo.
+    ("Qtd. Itens no Cupom", ["quantidadeItem", "quantidade"], "num",     None),
+    ("Código Produto",      ["codigo"],                       "text",    None),
+    ("Descrição",           ["produto"],                      "text",    None),
+    ("Grupo",               ["grupo"],                        "text",    None),
+    ("Sub-Grupo",           ["subGrupo"],                     "text",    None),
+    ("Categorias",          ["categorias"],                   "text",    None),
+    ("Quantidade",          ["quantidade", "quantidadeItem"], "num",     None),
+    ("Valor Unitário",      ["valorUnitario"],                "num",     None),
+    ("Desconto Unitário",   ["desconto"],                     "num",     None),
+    ("Valor Total",         ["valorTotal"],                   "num",     None),
+    ("Vendedor",            ["vendedor"],                     "text",    None),
 ]
 
 
