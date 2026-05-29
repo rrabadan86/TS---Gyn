@@ -277,18 +277,31 @@ def replay_export_with_dates(page, destino_path: Path):
     log(f"Arquivo exportado (período aplicado): {destino_path.name}")
 
 # --------- FALLBACK: baixar JSON e gerar Excel ----------
+# adicione timedelta no import lá em cima:
+# from datetime import datetime, timedelta
+
+def _janelas_mensais(ini_dt, fim_dt):
+    janelas, cur = [], ini_dt
+    while cur <= fim_dt:
+        if cur.month == 12:
+            prox = cur.replace(year=cur.year + 1, month=1, day=1)
+        else:
+            prox = cur.replace(month=cur.month + 1, day=1)
+        fim_janela = min(prox - timedelta(seconds=1), fim_dt)
+        janelas.append((cur, fim_janela))
+        cur = prox
+    return janelas
+
+
 def fetch_report_json_with_dates(page):
     if not Captured.filtro_url:
         raise RuntimeError("Endpoint de dados não capturado ainda.")
     parsed = urlparse(Captured.filtro_url)
-    qs = parse_qs(parsed.query)
-    qs["dataInicial"] = [FMT_JSON_INI]
-    qs["dataFinal"] = [FMT_JSON_FIM]
+    base_qs = parse_qs(parsed.query)
     if LOJA_ID_DESTINO:
-        qs["lojaId"] = [LOJA_ID_DESTINO]
-    target_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}?{urlencode(qs, doseq=True)}"
+        base_qs["lojaId"] = [LOJA_ID_DESTINO]
     headers = {**_clean_headers(Captured.filtro_headers or {})}
-    log(f"[dados-replay] GET -> {target_url}")
+
     js_code = """
     async ([url, headers]) => {
         const res = await fetch(url, { method: "GET", headers });
@@ -296,14 +309,46 @@ def fetch_report_json_with_dates(page):
         return { ok: res.ok, status: res.status, text };
     }
     """
-    result = page.evaluate(js_code, [target_url, headers])
-    if not result.get("ok"):
-        raise RuntimeError(f"Falha ao obter dados: HTTP {result.get('status')}")
-    try:
-        data = json.loads(result["text"])
-    except Exception as e:
-        raise RuntimeError(f"Não consegui decodificar o JSON da API: {e}") from e
-    return data
+
+    todos = []
+    for jini, jfim in _janelas_mensais(INI_DT, FIM_DT):
+        qs = dict(base_qs)
+        qs["dataInicial"] = [jini.strftime("%Y-%m-%dT%H:%M:%S.000Z")]
+        qs["dataFinal"]   = [jfim.strftime("%Y-%m-%dT%H:%M:%S.000Z")]
+        target_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}?{urlencode(qs, doseq=True)}"
+        log(f"[dados-replay] {jini:%d/%m/%Y} -> {jfim:%d/%m/%Y}")
+
+        result = None
+        for tentativa in range(1, 4):
+            result = page.evaluate(js_code, [target_url, headers])
+            if result.get("ok"):
+                break
+            log(f"  HTTP {result.get('status')} (tentativa {tentativa}/3)")
+            page.wait_for_timeout(2000 * tentativa)
+
+        if not result or not result.get("ok"):
+            raise RuntimeError(
+                f"Falha na janela {jini:%d/%m} - {jfim:%d/%m}: "
+                f"HTTP {result.get('status') if result else '??'}"
+            )
+
+        try:
+            parcial = json.loads(result["text"])
+        except Exception as e:
+            raise RuntimeError(f"JSON inválido na janela {jini:%d/%m}: {e}") from e
+
+        if isinstance(parcial, list):
+            todos.extend(parcial)
+        elif isinstance(parcial, dict):
+            for key in ("items", "data", "resultado", "rows", "content"):
+                if isinstance(parcial.get(key), list):
+                    todos.extend(parcial[key])
+                    break
+            else:
+                todos.append(parcial)
+
+    log(f"[dados-replay] total de linhas agregadas: {len(todos)}")
+    return todos
 
 # ----------------- Normalização/Excel -----------------
 MAPEAMENTO_COLUNAS = {
