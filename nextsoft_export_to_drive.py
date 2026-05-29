@@ -366,17 +366,16 @@ COLUNAS = [
     ("CNPJ",                ["cnpj"],                         "text",    "APPNEXT_LOJA_CNPJ"),
     ("Data",                ["data"],                         "data_br", None),
     ("Número Cupom",        ["numeroCupom"],                  "text",    None),
-    # ATENÇÃO: a API tem 'quantidadeItem' e 'quantidade'. Assumi que
-    # 'quantidadeItem' = itens no cupom e 'quantidade' = qtd da linha.
-    # Confira pela amostra "[debug] 1a linha"; se estiver trocado, basta
-    # inverter os campos nesta linha e na coluna "Quantidade" abaixo.
-    ("Qtd. Itens no Cupom", ["quantidadeItem", "quantidade"], "num",     None),
+    # CONFIRMADO pela amostra: valorTotal = valorUnitario * quantidadeItem,
+    # logo 'quantidade' = total de itens do cupom (coluna E) e
+    # 'quantidadeItem' = qtd da linha (coluna "Quantidade", K).
+    ("Qtd. Itens no Cupom", ["quantidade", "quantidadeItem"], "num",     None),
     ("Código Produto",      ["codigo"],                       "text",    None),
     ("Descrição",           ["produto"],                      "text",    None),
     ("Grupo",               ["grupo"],                        "text",    None),
     ("Sub-Grupo",           ["subGrupo"],                     "text",    None),
     ("Categorias",          ["categorias"],                   "text",    None),
-    ("Quantidade",          ["quantidade", "quantidadeItem"], "num",     None),
+    ("Quantidade",          ["quantidadeItem", "quantidade"], "num",     None),
     ("Valor Unitário",      ["valorUnitario"],                "num",     None),
     ("Desconto Unitário",   ["desconto"],                     "num",     None),
     ("Valor Total",         ["valorTotal"],                   "num",     None),
